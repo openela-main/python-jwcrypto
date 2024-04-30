@@ -16,12 +16,14 @@
 
 Name:           python-%{srcname}
 Version:        0.8
-Release:        4%{?dist}
+Release:        5%{?dist}
 Summary:        Implements JWK, JWS, JWE specifications using python-cryptography
 
 License:        LGPLv3+
 URL:            https://github.com/latchset/%{srcname}
 Source0:        https://github.com/latchset/%{srcname}/releases/download/v%{version}/%{srcname}-%{version}.tar.gz
+
+Patch1:         0001-Address-potential-DoS-with-high-compression-ratio_rhel#28698.patch
 
 BuildArch:      noarch
 %if 0%{?with_python2}
@@ -67,6 +69,7 @@ Implements JWK, JWS, JWE specifications using python-cryptography
 %prep
 %setup -q -n %{srcname}-%{version}
 
+%autopatch -p 1
 
 %build
 %if 0%{?with_python2}
@@ -122,6 +125,10 @@ rm -rf %{buildroot}%{python3_sitelib}/%{srcname}/__pycache__/tests{,-cookbook}.*
 
 
 %changelog
+* Thu Apr 04 2024 Rafael Jeffman <rjeffman@redhat.com> - 0.8-5
+- Address potential DoS with high compression ratio
+  Resolves: RHEL-28698
+
 * Tue Aug 10 2021 Mohan Boddu <mboddu@redhat.com> - 0.8-4
 - Rebuilt for IMA sigs, glibc 2.34, aarch64 flags
   Related: rhbz#1991688
