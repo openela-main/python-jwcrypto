@@ -1,0 +1,44 @@
+From d2655d370586cb830e49acfb450f87598da60be8 Mon Sep 17 00:00:00 2001
+From: Simo Sorce <simo@redhat.com>
+Date: Thu, 7 Dec 2023 12:49:07 -0500
+Subject: [PATCH] Fix potential DoS issue with p2c header
+
+Unbounded p2c headers may be used to cause an application that accept
+PBES algorithms to spend alot of resources running PBKDF2 with a very
+high number of iterations.
+
+Clamp the default maximum to 16384 (double the default of 8192).
+An application that wants to use more iterations will have to chenge the
+jwa default max.
+
+Fixes CVE-2023-6681
+
+Signed-off-by: Simo Sorce <simo@redhat.com>
+---
+ jwcrypto/jwa.py   |  5 +++++
+ jwcrypto/tests.py | 12 ++++++++++++
+ 2 files changed, 17 insertions(+)
+
+diff --git a/jwcrypto/jwa.py b/jwcrypto/jwa.py
+index de7a79f..ca4568e 100644
+--- a/jwcrypto/jwa.py
++++ b/jwcrypto/jwa.py
+@@ -29,6 +29,8 @@
+ 
+ # Implements RFC 7518 - JSON Web Algorithms (JWA)
+ 
++default_max_pbkdf2_iterations = 16384
++
+
+ @six.add_metaclass(abc.ABCMeta)
+ class JWAAlgorithm(object):
+@@ -588,6 +590,9 @@ def __init__(self):
+         self.aeskwmap = {128: _A128KW, 192: _A192KW, 256: _A256KW}
+ 
+     def _get_key(self, alg, key, p2s, p2c):
++        if p2c > default_max_pbkdf2_iterations:
++            raise ValueError('Invalid p2c value, too large')
++
+         if isinstance(key, bytes):
+             plain = key
+         else:

@@ -16,12 +16,15 @@
 
 Name:           python-%{srcname}
 Version:        0.5.0
-Release:        1.1%{?dist}
+Release:        2%{?dist}
 Summary:        Implements JWK, JWS, JWE specifications using python-cryptography
 
 License:        LGPLv3+
 URL:            https://github.com/latchset/%{srcname}
 Source0:        https://github.com/latchset/%{srcname}/releases/download/v%{version}/%{srcname}-%{version}.tar.gz
+
+Patch1:         0001-Address-potential-DoS-with-high-compression-ratio_rhel#28697.patch
+Patch2:         0002-Limit-number-of-iterations-for-PBES_rhel#23038.patch
 
 BuildArch:      noarch
 %if %{with python2}
@@ -64,6 +67,7 @@ Implements JWK, JWS, JWE specifications using python-cryptography
 %prep
 %setup -q -n %{srcname}-%{version}
 
+%autopatch -p 1
 
 %build
 %if %{with python2}
@@ -114,6 +118,12 @@ rm -rf %{buildroot}/usr/share/doc/jwcrypto
 
 
 %changelog
+* Mon Apr 15 2024 Rafael Jeffman <rjeffman@redhat.com> - 0.5.0-2
+- Address potential DoS with high compression ratio
+  Resolves: RHEL-28697
+- Limit number of iterations for PBES
+  Resolves: RHEL-23036 RHEL-23037
+
 * Fri Jun 17 2022 Christian Heimes <cheimes@redhat.com> - 0.5.0-1.1
 - Bump dist to solve version sorting issue, fixes RHBZ#2097800
 
