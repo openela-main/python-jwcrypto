@@ -1,0 +1,40 @@
+diff -Naur jwcrypto-1.5.6/jwcrypto/jwk.py jwcrypto-1.5.6-new/jwcrypto/jwk.py
+--- jwcrypto-1.5.6/jwcrypto/jwk.py	2024-02-07 13:52:39.000000000 -0300
++++ jwcrypto-1.5.6-new/jwcrypto/jwk.py	2024-06-12 13:06:28.553972422 -0300
+@@ -11,7 +11,15 @@
+ from cryptography.hazmat.primitives.asymmetric import ec
+ from cryptography.hazmat.primitives.asymmetric import rsa
+ 
+-from typing_extensions import deprecated
++try:
++    from typing_extensions import deprecated
++except ImportError:
++    def deprecated(_fn, *args):
++        def inner(func):
++            return func
++
++        return inner
++
+ 
+ from jwcrypto.common import JWException
+ from jwcrypto.common import base64url_decode, base64url_encode
+diff -Naur jwcrypto-1.5.6/jwcrypto/jwt.py jwcrypto-1.5.6-new/jwcrypto/jwt.py
+--- jwcrypto-1.5.6/jwcrypto/jwt.py	2024-02-07 13:52:39.000000000 -0300
++++ jwcrypto-1.5.6-new/jwcrypto/jwt.py	2024-06-12 13:26:48.534696766 -0300
+@@ -4,7 +4,15 @@
+ import time
+ import uuid
+ 
+-from typing_extensions import deprecated
++try:
++    from typing_extensions import deprecated
++except ImportError:
++    def deprecated(*args):
++        def inner(func):
++            return func
++
++        return inner
++
+ 
+ from jwcrypto.common import JWException, JWKeyNotFound
+ from jwcrypto.common import json_decode, json_encode

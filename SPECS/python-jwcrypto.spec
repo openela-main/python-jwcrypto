@@ -12,18 +12,21 @@
 %bcond_without python2
 %endif
 
+# Disable auto-generation of python dependencies.
+%{?python_disable_dependency_generator}
+
 %global srcname jwcrypto
 
 Name:           python-%{srcname}
-Version:        0.8
-Release:        5%{?dist}
+Version:        1.5.6
+Release:        2%{?dist}
 Summary:        Implements JWK, JWS, JWE specifications using python-cryptography
 
 License:        LGPLv3+
 URL:            https://github.com/latchset/%{srcname}
 Source0:        https://github.com/latchset/%{srcname}/releases/download/v%{version}/%{srcname}-%{version}.tar.gz
 
-Patch1:         0001-Address-potential-DoS-with-high-compression-ratio_rhel#28698.patch
+Patch0001:         0001-ignore-deprecated-annotation.patch
 
 BuildArch:      noarch
 %if 0%{?with_python2}
@@ -36,7 +39,7 @@ BuildRequires:  python2-pytest
 %if 0%{?with_python3}
 BuildRequires:  python%{python3_pkgversion}-devel
 BuildRequires:  python%{python3_pkgversion}-setuptools
-BuildRequires:  python%{python3_pkgversion}-cryptography >= 1.5
+BuildRequires:  python%{python3_pkgversion}-cryptography >= 2.3
 BuildRequires:  python%{python3_pkgversion}-pytest
 %endif
 
@@ -58,7 +61,7 @@ Implements JWK, JWS, JWE specifications using python-cryptography
 %if 0%{?with_python3}
 %package -n python%{python3_pkgversion}-%{srcname}
 Summary:        Implements JWK, JWS, JWE specifications using python-cryptography
-Requires:       python%{python3_pkgversion}-cryptography >= 1.5
+Requires:       python%{python3_pkgversion}-cryptography >= 2.3
 %{?python_provide:%python_provide python%{python3_pkgversion}-%{srcname}}
 
 %description -n python%{python3_pkgversion}-%{srcname}
@@ -69,7 +72,10 @@ Implements JWK, JWS, JWE specifications using python-cryptography
 %prep
 %setup -q -n %{srcname}-%{version}
 
-%autopatch -p 1
+for p in %patches; do
+    %__patch -p1 -i $p
+done
+
 
 %build
 %if 0%{?with_python2}
@@ -125,6 +131,14 @@ rm -rf %{buildroot}%{python3_sitelib}/%{srcname}/__pycache__/tests{,-cookbook}.*
 
 
 %changelog
+* Fri Aug 09 2024 Rafael Jeffman <rjeffman@redhat.com> - 1.5.6-2
+- Disable auto-generation of dependencies
+  Related: RHEL-34809
+
+* Tue Jun 18 2024 Rafael Jeffman <rjeffman@redhat.com> - 1.5.6-1
+- Rebase to version 1.5.6
+  Resolve: RHEL-34809
+
 * Thu Apr 04 2024 Rafael Jeffman <rjeffman@redhat.com> - 0.8-5
 - Address potential DoS with high compression ratio
   Resolves: RHEL-28698
