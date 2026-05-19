@@ -19,14 +19,16 @@
 
 Name:           python-%{srcname}
 Version:        1.5.6
-Release:        2%{?dist}
+Release:        3%{?dist}
 Summary:        Implements JWK, JWS, JWE specifications using python-cryptography
 
 License:        LGPLv3+
 URL:            https://github.com/latchset/%{srcname}
 Source0:        https://github.com/latchset/%{srcname}/releases/download/v%{version}/%{srcname}-%{version}.tar.gz
 
-Patch0001:         0001-ignore-deprecated-annotation.patch
+Patch1:         0001-ignore-deprecated-annotation.patch
+# Security fix for CVE-2026-39373
+Patch2:         0002-Limit-max-plaintext-size-for-JWE-decompression.patch
 
 BuildArch:      noarch
 %if 0%{?with_python2}
@@ -71,10 +73,8 @@ Implements JWK, JWS, JWE specifications using python-cryptography
 
 %prep
 %setup -q -n %{srcname}-%{version}
-
-for p in %patches; do
-    %__patch -p1 -i $p
-done
+%patch -P 1 -p 1
+%patch -P 2 -p 1
 
 
 %build
@@ -131,6 +131,10 @@ rm -rf %{buildroot}%{python3_sitelib}/%{srcname}/__pycache__/tests{,-cookbook}.*
 
 
 %changelog
+* Tue Apr 14 2026 Rafael Jeffman <rjeffman@redhat.com> - 1.5.6-3
+- Limit max plaintext size for JWE decompression
+  Resolves: RHEL-166029
+
 * Fri Aug 09 2024 Rafael Jeffman <rjeffman@redhat.com> - 1.5.6-2
 - Disable auto-generation of dependencies
   Related: RHEL-34809
