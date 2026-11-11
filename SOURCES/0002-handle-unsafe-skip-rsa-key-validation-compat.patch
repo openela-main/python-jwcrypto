@@ -1,0 +1,40 @@
+--- jwcrypto-1.5.7/jwcrypto/jwk.py	2026-06-03 13:07:15
++++ jwcrypto-1.5.7-new/jwcrypto/jwk.py	2026-06-23 00:49:09
+@@ -839,9 +839,14 @@
+     def _rsa_pri(self):
+         k = self._cache_pri_k
+         if k is None:
+-            u = self.unsafe_skip_rsa_key_validation
+-            k = self._rsa_pri_n().private_key(default_backend(),
+-                                              unsafe_skip_rsa_key_validation=u)
++            try:
++                u = self.unsafe_skip_rsa_key_validation
++                k = self._rsa_pri_n().private_key(
++                    default_backend(),
++                    unsafe_skip_rsa_key_validation=u)
++            except TypeError:
++                k = self._rsa_pri_n().private_key(
++                    default_backend())
+             self._cache_pri_k = k
+         return k
+ 
+@@ -997,10 +1002,15 @@
+         """
+ 
+         try:
+-            u = self.unsafe_skip_rsa_key_validation
+-            key = serialization.load_pem_private_key(
+-                data, password=password, backend=default_backend(),
+-                unsafe_skip_rsa_key_validation=u)
++            try:
++                u = self.unsafe_skip_rsa_key_validation
++                key = serialization.load_pem_private_key(
++                    data, password=password, backend=default_backend(),
++                    unsafe_skip_rsa_key_validation=u)
++            except TypeError:
++                key = serialization.load_pem_private_key(
++                    data, password=password,
++                    backend=default_backend())
+         except ValueError as e:
+             if password is not None:
+                 raise e

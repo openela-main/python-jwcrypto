@@ -1,0 +1,114 @@
+From f883b05c865e82718a2f40f6f4ac899baeece38c Mon Sep 17 00:00:00 2001
+From: Rafael Guterres Jeffman <rjeffman@redhat.com>
+Date: Fri, 18 Sep 2026 14:28:54 -0300
+Subject: [PATCH] Make ML-DSA optional
+
+This patch detects if ML-DSA is usable during runtime, and configure
+jwcrypto to use it, if available. When not available, use of ML-DSA will
+raise a NotImplementedError.
+
+This change allows the use of PyCA cryptography versions that do not
+support ML-DSA, which is required by some older systems.
+
+Assisted-by: Claude Code Haiku 4.5 <noreply@anthropic.com>
+Signed-off-by: Rafael Guterres Jeffman <rjeffman@redhat.com>
+---
+ jwcrypto/jwa.py | 13 +++++++++++++
+ jwcrypto/jws.py |  9 ++++++++-
+ pyproject.toml  |  2 +-
+ setup.py        |  2 +-
+ 4 files changed, 23 insertions(+), 3 deletions(-)
+
+diff --git a/jwcrypto/jwa.py b/jwcrypto/jwa.py
+index a3a5415..39ed027 100644
+--- a/jwcrypto/jwa.py
++++ b/jwcrypto/jwa.py
+@@ -964,6 +964,13 @@ class _Ed448(_RawJWS, JWAAlgorithm):
+         return pkey.verify(signature, payload)
+ 
+ 
++try:
++    from cryptography.hazmat.primitives.asymmetric import mldsa
++    _MLDSA_AVAILABLE = True
++except ImportError:
++    _MLDSA_AVAILABLE = False
++
++
+ class _RawMLDSA(_RawJWS):
+ 
+     _alg_name = None
+@@ -975,11 +982,17 @@ class _RawMLDSA(_RawJWS):
+             raise InvalidJWEKeyType(self._alg_name, key.get('alg'))
+ 
+     def sign(self, key, payload):
++        if not _MLDSA_AVAILABLE:
++            raise NotImplementedError(
++                f'{self._alg_name} requires cryptography >= 49.0.0')
+         self._check_key(key)
+         skey = key.get_op_key('sign')
+         return skey.sign(payload, context=b"")
+ 
+     def verify(self, key, payload, signature):
++        if not _MLDSA_AVAILABLE:
++            raise NotImplementedError(
++                f'{self._alg_name} requires cryptography >= 49.0.0')
+         self._check_key(key)
+         pkey = key.get_op_key('verify')
+         pkey.verify(signature, payload, context=b"")
+diff --git a/jwcrypto/jws.py b/jwcrypto/jws.py
+index b0ec073..ff9eb76 100644
+--- a/jwcrypto/jws.py
++++ b/jwcrypto/jws.py
+@@ -25,6 +25,12 @@ JWSHeaderRegistry = {
+ }
+ """Registry of valid header parameters"""
+ 
++try:
++    from cryptography.hazmat.primitives.asymmetric import mldsa
++    _MLDSA_AVAILABLE = True
++except ImportError:
++    _MLDSA_AVAILABLE = False
++
+ default_allowed_algs = [
+     'HS256', 'HS384', 'HS512',
+     'RS256', 'RS384', 'RS512',
+@@ -32,8 +38,9 @@ default_allowed_algs = [
+     'PS256', 'PS384', 'PS512',
+     'EdDSA', 'ES256K', 'Ed25519',
+     'Ed448',
+-    'ML-DSA-44', 'ML-DSA-65', 'ML-DSA-87',
+ ]
++if _MLDSA_AVAILABLE:
++    default_allowed_algs.extend(['ML-DSA-44', 'ML-DSA-65', 'ML-DSA-87'])
+ """Default allowed algorithms"""
+ 
+ 
+diff --git a/pyproject.toml b/pyproject.toml
+index 78b478b..cff478a 100644
+--- a/pyproject.toml
++++ b/pyproject.toml
+@@ -24,7 +24,7 @@ classifiers = [
+     "Topic :: Software Development :: Libraries :: Python Modules",
+ ]
+ dependencies = [
+-    "cryptography >= 49.0.0",
++    "cryptography >= 39.0.0",
+     "typing_extensions >= 4.5.0",
+ ]
+ 
+diff --git a/setup.py b/setup.py
+index 9c0a3cd..104ec0d 100755
+--- a/setup.py
++++ b/setup.py
+@@ -38,7 +38,7 @@ setup(
+     ],
+     data_files = [('share/doc/jwcrypto', ['LICENSE', 'README.md'])],
+     install_requires = [
+-        'cryptography >= 49.0.0',
++        'cryptography >= 39.0.0',
+         'typing_extensions >= 4.5.0',
+     ],
+     python_requires = '>= 3.9',
+-- 
+2.54.0 (Apple Git-157)
+

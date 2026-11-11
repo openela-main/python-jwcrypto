@@ -18,8 +18,8 @@
 %global srcname jwcrypto
 
 Name:           python-%{srcname}
-Version:        1.5.6
-Release:        3%{?dist}
+Version:        1.6.1
+Release:        1%{?dist}
 Summary:        Implements JWK, JWS, JWE specifications using python-cryptography
 
 License:        LGPLv3+
@@ -27,8 +27,8 @@ URL:            https://github.com/latchset/%{srcname}
 Source0:        https://github.com/latchset/%{srcname}/releases/download/v%{version}/%{srcname}-%{version}.tar.gz
 
 Patch1:         0001-ignore-deprecated-annotation.patch
-# Security fix for CVE-2026-39373
-Patch2:         0002-Limit-max-plaintext-size-for-JWE-decompression.patch
+Patch2:         0002-handle-unsafe-skip-rsa-key-validation-compat.patch
+Patch3:         0003-Make-ML-DSA-optional.patch
 
 BuildArch:      noarch
 %if 0%{?with_python2}
@@ -73,8 +73,7 @@ Implements JWK, JWS, JWE specifications using python-cryptography
 
 %prep
 %setup -q -n %{srcname}-%{version}
-%patch -P 1 -p 1
-%patch -P 2 -p 1
+%autopatch -p 1
 
 
 %build
@@ -131,6 +130,18 @@ rm -rf %{buildroot}%{python3_sitelib}/%{srcname}/__pycache__/tests{,-cookbook}.*
 
 
 %changelog
+* Thu Jun 25 2026 Rafael Jeffman <rjeffman@redhat.com> - 1.5.8-1
+- Rebase to 1.6.1
+  Resolves: RHEL-260483
+
+* Thu Jun 25 2026 Rafael Jeffman <rjeffman@redhat.com> - 1.5.8-1
+- Rebase to 1.5.8
+  Resolves: RHEL-168728
+
+* Tue Jun 23 2026 Rafael Jeffman <rjeffman@redhat.com> - 1.5.7-1
+- Rebase to 1.5.7
+  Resolves: RHEL-168728
+
 * Tue Apr 14 2026 Rafael Jeffman <rjeffman@redhat.com> - 1.5.6-3
 - Limit max plaintext size for JWE decompression
   Resolves: RHEL-166029
